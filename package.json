@@ -26,6 +26,7 @@
     "path": "^0.12.7",
     "sharp": "^0.34.1",
     "slugify": "^1.6.6",
+    "streamifier": "^0.1.1",
     "stripe": "^18.5.0",
     "url": "^0.11.4",
     "validator": "^13.9.0"
