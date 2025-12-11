@@ -1,13 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { getAboutUs, updateAboutUs } = require("../controllers/aboutUsController");
-const upload = multer({ dest: "uploads/" });
+const {
+  getAboutUs,
+  updateAboutUs,
+} = require("../controllers/aboutUsController");
 
-// ✅ GET route (for frontend to fetch data)
+// ✅ MUST use memoryStorage
+const upload = multer({ storage: multer.memoryStorage() });
+
+// ✅ GET
 router.get("/", getAboutUs);
 
-// ✅ PUT route (for admin to update data)
+// ✅ CREATE
+router.post("/", upload.any(), updateAboutUs);
+
+// ✅ UPDATE
 router.put("/", upload.any(), updateAboutUs);
 
 module.exports = router;

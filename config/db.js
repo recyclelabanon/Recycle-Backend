@@ -2,11 +2,14 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/participateDB", {
+    console.log("🔍 Connecting to:", process.env.MONGO_URI);
+
+    await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log("✅ MongoDB Connected");
+
+    console.log("✅ MongoDB Atlas Connected!");
   } catch (error) {
     console.error("❌ MongoDB Connection Failed:", error.message);
     process.exit(1);

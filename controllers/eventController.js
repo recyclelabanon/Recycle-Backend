@@ -1,295 +1,137 @@
-const Event = require('../models/Event');
-const Registration = require('../models/Registration');
-const Media = require('../models/Media');
-const { StatusCodes } = require('http-status-codes');
-const { BadRequestError, NotFoundError, ForbiddenError } = require('../utils/errors');
+const Event = require("../models/Event");
 
-// Get all events with filters
-exports.getAllEvents = async (req, res) => {
-  // Extract query parameters
-  const { search, status, page = 1, limit = 10, sort = '-startDate' } = req.query;
-  
-  // Build query
-  const queryObject = { isActive: true };
-  
-  // Search functionality
-  if (search) {
-    queryObject.$text = { $search: search };
+// Helper: determine status by dates if not provided
+const computeStatus = (startDate, endDate) => {
+  const now = new Date();
+  if (startDate <= now && endDate >= now) return "CURRENT";
+  if (startDate > now) return "UPCOMING";
+  return "PAST";
+};
+
+const getAllEvents = async (req, res) => {
+  try {
+    const events = await Event.find().sort({ startDate: 1 });
+    return res.json(events);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
-  
-  // Filter by status
-  if (status) {
+};
+
+const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    res.json(event);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const createEvent = async (req, res) => {
+  try {
+    const data = req.body;
+    // parse dates
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    const status = data.status || computeStatus(startDate, endDate);
+
+    const event = new Event({
+      title: data.title,
+      description: data.description,
+      image: data.image,
+      heroImage: data.heroImage,
+      startDate,
+      endDate,
+      location: data.location,
+      status,
+      spotsTotal: data.spotsTotal || 0,
+      spotsRemaining: data.spotsRemaining || 0,
+      highlights: data.highlights || [],
+      timeline: data.timeline || [],
+      media: data.media || [],
+    });
+
+    await event.save();
+    res.status(201).json(event);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error creating event", err });
+  }
+};
+
+const updateEvent = async (req, res) => {
+  try {
+    const update = req.body;
+    if (update.startDate) update.startDate = new Date(update.startDate);
+    if (update.endDate) update.endDate = new Date(update.endDate);
+
+    if (!update.status && (update.startDate || update.endDate)) {
+      const eventDoc = await Event.findById(req.params.id);
+      const start = update.startDate || eventDoc.startDate;
+      const end = update.endDate || eventDoc.endDate;
+      update.status = computeStatus(new Date(start), new Date(end));
+    }
+
+    const updated = await Event.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating event", err });
+  }
+};
+
+const deleteEvent = async (req, res) => {
+  try {
+    await Event.findByIdAndDelete(req.params.id);
+    res.json({ message: "Event deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error deleting event", err });
+  }
+};
+
+const getCurrentEvents = async (req, res) => {
+  try {
     const now = new Date();
-    
-    if (status === 'upcoming') {
-      queryObject.startDate = { $gt: now };
-    } else if (status === 'current') {
-      queryObject.startDate = { $lte: now };
-      queryObject.endDate = { $gte: now };
-    } else if (status === 'past') {
-      queryObject.endDate = { $lt: now };
-    }
+    const events = await Event.find({ startDate: { $lte: now }, endDate: { $gte: now } }).sort({ startDate: 1 });
+    res.json(events);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
-  
-  // Execute query with pagination
-  const skip = (Number(page) - 1) * Number(limit);
-  
-  const events = await Event.find(queryObject)
-    .sort(sort)
-    .skip(skip)
-    .limit(Number(limit))
-    .select('-__v');
-  
-  // Get total count for pagination
-  const totalEvents = await Event.countDocuments(queryObject);
-  
-  res.status(StatusCodes.OK).json({
-    events,
-    count: events.length,
-    totalPages: Math.ceil(totalEvents / Number(limit)),
-    currentPage: Number(page)
-  });
 };
 
-// Get a single event by ID
-exports.getEvent = async (req, res) => {
-  const { id: eventId } = req.params;
-  
-  const event = await Event.findOne({ _id: eventId, isActive: true });
-  
-  if (!event) {
-    throw new NotFoundError(`No event found with ID: ${eventId}`);
+const getUpcomingEvents = async (req, res) => {
+  try {
+    const now = new Date();
+    const events = await Event.find({ startDate: { $gt: now } }).sort({ startDate: 1 });
+    res.json(events);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
-  
-  // Get associated media
-  const media = await Media.find({ event: eventId, isPublic: true }).select('-__v');
-  
-  res.status(StatusCodes.OK).json({ event, media });
 };
 
-// Create a new event
-exports.createEvent = async (req, res) => {
-  req.body.createdBy = req.user.userId;
-  
-  const event = await Event.create(req.body);
-  
-  res.status(StatusCodes.CREATED).json({ event });
+const getPastEvents = async (req, res) => {
+  try {
+    const now = new Date();
+    const events = await Event.find({ endDate: { $lt: now } }).sort({ startDate: -1 });
+    res.json(events);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
-// Update an event
-exports.updateEvent = async (req, res) => {
-  const { id: eventId } = req.params;
-  const userId = req.user.userId;
-  
-  const event = await Event.findOne({ _id: eventId });
-  
-  if (!event) {
-    throw new NotFoundError(`No event found with ID: ${eventId}`);
-  }
-  
-  // Check if user is admin or the creator of the event
-  if (req.user.role !== 'admin' && event.createdBy.toString() !== userId) {
-    throw new ForbiddenError('You do not have permission to update this event');
-  }
-  
-  req.body.updatedBy = userId;
-  
-  const updatedEvent = await Event.findByIdAndUpdate(
-    eventId,
-    req.body,
-    { new: true, runValidators: true }
-  );
-  
-  res.status(StatusCodes.OK).json({ event: updatedEvent });
-};
-
-// Delete an event (soft delete)
-exports.deleteEvent = async (req, res) => {
-  const { id: eventId } = req.params;
-  const userId = req.user.userId;
-  
-  const event = await Event.findOne({ _id: eventId });
-  
-  if (!event) {
-    throw new NotFoundError(`No event found with ID: ${eventId}`);
-  }
-  
-  // Check if user is admin or the creator of the event
-  if (req.user.role !== 'admin' && event.createdBy.toString() !== userId) {
-    throw new ForbiddenError('You do not have permission to delete this event');
-  }
-  
-  // Soft delete by setting isActive to false
-  event.isActive = false;
-  event.updatedBy = userId;
-  await event.save();
-  
-  res.status(StatusCodes.OK).json({ message: 'Event deleted successfully' });
-};
-
-// Controller for registering for an event
-exports.registerForEvent = async (req, res) => {
-  const { id: eventId } = req.params;
-  const userId = req.user?.userId;
-  
-  // Find the event
-  const event = await Event.findOne({ _id: eventId, isActive: true });
-  
-  if (!event) {
-    throw new NotFoundError(`No event found with ID: ${eventId}`);
-  }
-  
-  // Check if event is in the past
-  if (new Date() > event.endDate) {
-    throw new BadRequestError('Cannot register for a past event');
-  }
-  
-  // Check if event is full
-  if (event.registeredAttendees >= event.maxSeats) {
-    throw new BadRequestError('This event is already full');
-  }
-  
-  // Check if user is already registered
-  if (userId) {
-    const existingRegistration = await Registration.findOne({
-      event: eventId,
-      user: userId,
-      status: { $ne: 'cancelled' }
-    });
-    
-    if (existingRegistration) {
-      throw new BadRequestError('You are already registered for this event');
-    }
-  }
-  
-  // Create registration object
-  const registration = {
-    event: eventId,
-    registeredBy: userId,
-    status: 'confirmed'
-  };
-  
-  // Handle registered user vs guest registration
-  if (userId) {
-    registration.user = userId;
-  } else {
-    // Guest registration requires email
-    if (!req.body.email) {
-      throw new BadRequestError('Email is required for guest registration');
-    }
-    
-    registration.guestInfo = {
-      name: req.body.name || 'Guest',
-      email: req.body.email,
-      phone: req.body.phone || ''
-    };
-    
-    // Check if this email is already registered
-    const existingGuestRegistration = await Registration.findOne({
-      event: eventId,
-      'guestInfo.email': req.body.email,
-      status: { $ne: 'cancelled' }
-    });
-    
-    if (existingGuestRegistration) {
-      throw new BadRequestError('This email is already registered for this event');
-    }
-  }
-  
-  // Add special requests if provided
-  if (req.body.specialRequests) {
-    registration.specialRequests = req.body.specialRequests;
-  }
-  
-  // Create the registration
-  const newRegistration = await Registration.create(registration);
-  
-  // Increment the registeredAttendees count
-  event.registeredAttendees += 1;
-  await event.save();
-  
-  res.status(StatusCodes.CREATED).json({ 
-    registration: newRegistration,
-    remainingSeats: event.maxSeats - event.registeredAttendees
-  });
-};
-
-// Controller for cancelling a registration
-exports.cancelRegistration = async (req, res) => {
-  const { id: eventId, registrationId } = req.params;
-  const userId = req.user?.userId;
-  
-  // Find the registration
-  const registration = await Registration.findOne({ _id: registrationId, event: eventId });
-  
-  if (!registration) {
-    throw new NotFoundError(`No registration found with ID: ${registrationId}`);
-  }
-  
-  // Check if user has permission to cancel
-  const isAdmin = req.user?.role === 'admin';
-  const isOwner = userId && registration.user && registration.user.toString() === userId;
-  const isRegistrar = userId && registration.registeredBy && registration.registeredBy.toString() === userId;
-  
-  if (!isAdmin && !isOwner && !isRegistrar) {
-    throw new ForbiddenError('You do not have permission to cancel this registration');
-  }
-  
-  // Update registration status
-  registration.status = 'cancelled';
-  await registration.save();
-  
-  // Decrement the registeredAttendees count if it wasn't already counted as cancelled
-  if (registration.status !== 'cancelled') {
-    const event = await Event.findById(eventId);
-    if (event) {
-      event.registeredAttendees = Math.max(0, event.registeredAttendees - 1);
-      await event.save();
-    }
-  }
-  
-  res.status(StatusCodes.OK).json({ 
-    message: 'Registration cancelled successfully',
-    registration
-  });
-};
-
-// Get registrations for an event (admin only)
-exports.getEventRegistrations = async (req, res) => {
-  const { id: eventId } = req.params;
-  const { status, page = 1, limit = 25 } = req.query;
-  
-  // Check if event exists
-  const event = await Event.findOne({ _id: eventId, isActive: true });
-  
-  if (!event) {
-    throw new NotFoundError(`No event found with ID: ${eventId}`);
-  }
-  
-  // Build query
-  const queryObject = { event: eventId };
-  
-  if (status) {
-    queryObject.status = status;
-  }
-  
-  // Pagination
-  const skip = (Number(page) - 1) * Number(limit);
-  
-  // Get registrations
-  const registrations = await Registration.find(queryObject)
-    .populate('user', 'firstName lastName email')
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(Number(limit));
-  
-  // Get total count
-  const totalRegistrations = await Registration.countDocuments(queryObject);
-  
-  res.status(StatusCodes.OK).json({
-    registrations,
-    count: registrations.length,
-    totalPages: Math.ceil(totalRegistrations / Number(limit)),
-    currentPage: Number(page)
-  });
+module.exports = {
+  getAllEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  getCurrentEvents,
+  getUpcomingEvents,
+  getPastEvents,
 };

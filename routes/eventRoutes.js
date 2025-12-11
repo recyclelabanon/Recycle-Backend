@@ -1,31 +1,26 @@
-// routes/eventRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
   getAllEvents,
-  getEvent,
+  getEventById,
   createEvent,
   updateEvent,
   deleteEvent,
-  registerForEvent,
-  cancelRegistration,
-  getEventRegistrations
-} = require('../controllers/eventController'); // Verify this path is correct
+  getCurrentEvents,
+  getUpcomingEvents,
+  getPastEvents,
+} = require("../controllers/eventController");
 
-const { authenticateUser, isAdmin } = require('../middleware/auth');
+// public endpoints
+router.get("/", getAllEvents);
+router.get("/current", getCurrentEvents);
+router.get("/upcoming", getUpcomingEvents);
+router.get("/past", getPastEvents);
+router.get("/:id", getEventById);
 
-// Public routes
-router.get('/', getAllEvents);
-router.get('/:id', getEvent);
-
-// Protected routes
-router.post('/', authenticateUser, isAdmin, createEvent);
-router.patch('/:id', authenticateUser, updateEvent);
-router.delete('/:id', authenticateUser, deleteEvent);
-
-// Registration routes
-router.post('/:id/registrations', authenticateUser, registerForEvent);
-router.delete('/:id/registrations/:registrationId', authenticateUser, cancelRegistration);
-router.get('/:id/registrations', authenticateUser, isAdmin, getEventRegistrations);
+// admin (create/update/delete)
+router.post("/", createEvent);
+router.put("/:id", updateEvent);
+router.delete("/:id", deleteEvent);
 
 module.exports = router;

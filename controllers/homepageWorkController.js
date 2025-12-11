@@ -1,4 +1,5 @@
 const HomepageWork = require("../models/homepageWorkModel");
+const { uploadToCloudinary } = require("../utils/cloudinary");
 
 exports.getHomepageWork = async (req, res) => {
   try {
@@ -17,19 +18,25 @@ exports.updateHomepageWork = async (req, res) => {
       programs = JSON.parse(programs);
     }
 
-    // Attach uploaded images to correct program item
-    if (req.files) {
-      Object.keys(req.files).forEach((field) => {
-        const match = field.match(/programs\[(\d+)\]\.image/);
-        if (match) {
-          const index = match[1];
-          if (programs[index]) {
-            programs[index].image = `/uploads/${req.files[field][0].filename}`;
-          }
-        }
-      });
+    // ✔ 1. Upload images from req.files
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const match = file.fieldname.match(/programs\[(\d+)\]\.image/);
+        if (!match) continue;
+
+        const index = parseInt(match[1]);
+
+        // ✔ Upload to cloudinary
+        const url = await uploadToCloudinary(
+          file.buffer,
+          "ecosouk/homepage/work"
+        );
+
+        programs[index].image = url;
+      }
     }
 
+    // ✔ 2. Update DB
     const updated = await HomepageWork.findOneAndUpdate(
       {},
       { heading, paragraph, programs },
@@ -39,7 +46,7 @@ exports.updateHomepageWork = async (req, res) => {
     res.status(200).json(updated);
 
   } catch (error) {
-    console.log(error);
+    console.error("Homepage Work Update Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

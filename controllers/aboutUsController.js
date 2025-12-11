@@ -1,59 +1,62 @@
 const AboutUs = require("../models/AboutUs");
 const { uploadToCloudinary } = require("../utils/cloudinary");
 
-// ✅ GET - Fetch AboutUs data
+// ✅ GET
 exports.getAboutUs = async (req, res) => {
   try {
     const about = await AboutUs.findOne();
     res.status(200).json({ success: true, data: about });
   } catch (error) {
     console.error("Fetch error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch", error });
+    res.status(500).json({ success: false, message: "Fetch failed" });
   }
 };
 
-// ✅ PUT - Update AboutUs data
+// ✅ CREATE or UPDATE
 exports.updateAboutUs = async (req, res) => {
   try {
-    const formData = req.body;
+    const { body, files } = req;
 
     const hero =
-      typeof formData.hero === "string"
-        ? JSON.parse(formData.hero)
-        : formData.hero || {};
+      typeof body.hero === "string" ? JSON.parse(body.hero) : body.hero || {};
 
     const sections =
-      typeof formData.sections === "string"
-        ? JSON.parse(formData.sections)
-        : formData.sections || [];
+      typeof body.sections === "string"
+        ? JSON.parse(body.sections)
+        : body.sections || [];
 
     const impactPrograms =
-      typeof formData.impactPrograms === "string"
-        ? JSON.parse(formData.impactPrograms)
-        : formData.impactPrograms || [];
+      typeof body.impactPrograms === "string"
+        ? JSON.parse(body.impactPrograms)
+        : body.impactPrograms || [];
 
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        if (!file || !file.fieldname || !file.path) continue;
-        const uploaded = await uploadToCloudinary(file.path);
+    // ✅ Upload images
+    if (files && files.length > 0) {
+      for (const file of files) {
+        if (!file.buffer) continue;
 
+        const imageUrl = await uploadToCloudinary(file.buffer, "aboutus");
+
+        // hero image
         if (file.fieldname === "heroBackground") {
-          hero.background = uploaded;
+          hero.background = { url: imageUrl };
         }
 
+        // section image
         if (file.fieldname.startsWith("sectionImage_")) {
-          const key = file.fieldname.split("sectionImage_")[1];
-          const sectionIndex = sections.findIndex((s) => s.key === key);
-          if (sectionIndex !== -1) {
-            sections[sectionIndex].image = uploaded;
+          const key = file.fieldname.replace("sectionImage_", "");
+          const index = sections.findIndex((s) => s.key === key);
+          if (index !== -1) {
+            sections[index].image = { url: imageUrl };
           }
         }
 
+        // program logos
         if (file.fieldname.startsWith("programLogo_")) {
-          const key = file.fieldname.split("programLogo_")[1];
-          const progIndex = impactPrograms.findIndex((p) => p.key === key);
-          if (progIndex !== -1) {
-            impactPrograms[progIndex].logo = uploaded;
+          const key = file.fieldname.replace("programLogo_", "");
+          const pIndex = impactPrograms.findIndex((p) => p.key === key);
+          if (pIndex !== -1) {
+            impactPrograms[pIndex].logo = { url: imageUrl };
           }
         }
       }
@@ -63,8 +66,8 @@ exports.updateAboutUs = async (req, res) => {
       {},
       {
         hero,
-        impactStatementHtml: formData.impactStatementHtml || "",
         sections,
+        impactStatementHtml: body.impactStatementHtml || "",
         impactPrograms,
       },
       { new: true, upsert: true }
@@ -73,6 +76,6 @@ exports.updateAboutUs = async (req, res) => {
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
     console.error("Update error:", error);
-    res.status(500).json({ success: false, message: "Update failed", error });
+    res.status(500).json({ success: false, message: "Update failed" });
   }
 };

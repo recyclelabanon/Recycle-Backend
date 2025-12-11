@@ -1,6 +1,7 @@
 const HomeHero = require("../models/homeHeroModel");
+const { uploadToCloudinary } = require("../utils/cloudinary");
 
-// ✅ Public API (No auth, for frontend)
+// Public GET
 exports.getHeroPublic = async (req, res) => {
   try {
     const hero = await HomeHero.findOne();
@@ -10,7 +11,7 @@ exports.getHeroPublic = async (req, res) => {
   }
 };
 
-// ✅ Admin Get Hero (Protected)
+// Admin GET
 exports.getHero = async (req, res) => {
   try {
     const hero = await HomeHero.findOne();
@@ -20,16 +21,21 @@ exports.getHero = async (req, res) => {
   }
 };
 
-// ✅ Admin Update Hero (Protected)
+// Admin UPDATE
 exports.updateHero = async (req, res) => {
   try {
     let hero = await HomeHero.findOne();
-
     const { title, subtitle, buttonText } = req.body;
 
-    const backgroundImage = req.file
-      ? `/uploads/${req.file.filename}`
-      : hero?.backgroundImage;
+    let backgroundImage = hero?.backgroundImage;
+
+    // If user uploaded a new image → upload to Cloudinary
+    if (req.file) {
+      backgroundImage = await uploadToCloudinary(
+        req.file.buffer,
+        "ecosouk/home-hero"
+      );
+    }
 
     if (!hero) {
       hero = new HomeHero({
@@ -48,6 +54,7 @@ exports.updateHero = async (req, res) => {
     await hero.save();
     res.json({ success: true, hero });
   } catch (err) {
+    console.error("HOME HERO UPDATE ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };

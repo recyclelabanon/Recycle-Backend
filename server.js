@@ -10,9 +10,10 @@ const connectDB = require('./config/db');
 
 // ✅ Routes imports
 const authenticateUser = require("./middleware/auth");
-
 const authRoutes = require('./routes/authRoutes');
+
 const eventRoutes = require('./routes/eventRoutes');
+
 const mediaRoutes = require('./routes/mediaRoutes');
 const userRoutes = require('./routes/userRoutes');
 const blogRoutes = require('./routes/blogRoutes');
@@ -45,10 +46,23 @@ const messageRoutes = require("./routes/messageRoutes");
 const contactRoutes = require('./routes/contactRoutes');
 const donationpageHeroRoutes = require('./routes/donationpageHero');
 const contactHeroRoutes = require('./routes/contactHeroRoutes');
-const initiativesRoutes = require('./routes/initiatives');
+//const initiativesRoutes = require('./routes/initiatives');
 const uploadRoutes = require('./routes/upload');
-
-
+const currentEventRoutes = require("./routes/currentEventRoutes");
+const upcomingEventRoutes = require("./routes/upcomingEventRoutes");
+const pastEventRoutes = require("./routes/pastEventRoutes");
+const eventPageHeroRoutes = require("./routes/eventPageHero");
+const newsPageRoutes = require("./routes/newsPageRoutes"); 
+//const blogRoutes = require("./routes/blogPageRoutes");
+const blogsPageHeroRoutes = require("./routes/blogsPageHeroRoutes");
+const teampartnersPageRoutes = require("./routes/teampartnersPageRoutes"); 
+//const teamPageRoutes = require("./routes/teamPageRoutes");
+//const uploadRoutes = require("./routes/uploadRoutes");
+const teamPageRoutes = require("./routes/teamPageRoutes");
+const initiativesRoutes = require("./routes/initiativesRoutes");
+const initiativesHeroRoutes = require("./routes/initiativesHeroRoutes");
+const joinUsRoutes = require("./routes/joinUsRoutes");
+const navbarRoutes = require("./routes/navbarRoutes");
 
 const app = express();
 
@@ -60,12 +74,16 @@ app.use(helmet({
 // ✅ Allowed Origins
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://127.0.0.1:5173",
   "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "http://localhost:4000",
+  "http://127.0.0.1:4000",
   "https://superb-crostata-799b06.netlify.app",
   "https://www.recyclelebanon.org",
   "https://recyclelebanon.org"
 ];
+
 
 // ✅ CORS FIX (Added PATCH)
 app.use(cors({
@@ -104,7 +122,9 @@ connectDB();
 
 // ✅ API Routes
 app.use("/api/v1/auth", authRoutes);
+
 app.use("/api/v1/events", eventRoutes);
+
 app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/blogs", blogRoutes);
@@ -136,8 +156,21 @@ app.use('/api/v1/donation-page-hero', donationpageHeroRoutes);
 app.use('/api/v1/contact-hero', contactHeroRoutes);
 app.use('/api/v1/initiatives', initiativesRoutes);
 app.use('/api/v1/upload', uploadRoutes);
-
-
+app.use("/api/v1/current-events", currentEventRoutes);
+app.use("/api/v1/upcoming-events", upcomingEventRoutes);
+app.use("/api/v1/past-events", pastEventRoutes);
+app.use("/api/v1/event-page-hero", eventPageHeroRoutes);
+app.use("/api/v1/news-page", newsPageRoutes);
+//app.use("/api/v1/blogs-page-hero",blogsPageHeroRoutes);
+app.use("/api/v1/blogs-page-hero", require("./routes/blogsPageHeroRoutes"));
+app.use("/api/v1/teampartners-page", require("./routes/teampartnersPageRoutes"));
+app.use("/api/v1/team-page", teamPageRoutes);
+//app.use("/api/v1/upload", uploadRoutes);
+//app.use("/api/v1/teampage", teamPageRoutes);
+app.use("/api/v1/initiatives", initiativesRoutes);
+app.use("/api/v1/initiatives-hero", initiativesHeroRoutes);
+app.use("/api/v1/join-us", joinUsRoutes);
+app.use("/api/v1/navbar", navbarRoutes);
 
 
 // ✅ Root

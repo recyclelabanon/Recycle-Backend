@@ -9,13 +9,16 @@ const {
   deleteBlog,
 } = require("../controllers/blogPageController");
 
+// Memory storage for multer
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// ------------------ Public routes ------------------
 router.get("/", getBlogs);
 router.get("/:id", getBlogById);
 
-// Admin routes
+// ------------------ Admin routes (DEV ONLY) ------------------
+// No authentication/role check in development
 router.post("/", upload.single("coverImage"), createBlog);
 router.put("/:id", upload.single("coverImage"), updateBlog);
 router.delete("/:id", deleteBlog);

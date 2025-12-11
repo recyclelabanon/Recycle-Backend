@@ -2,11 +2,22 @@ const cloudinary = require("cloudinary").v2;
 const Participate = require("../models/homepageParticipate.model");
 const fs = require("fs");
 
-// ✅ Get data (always one document only)
+// ===============================
+// ✅ Get data (never create in GET)
+// ===============================
 exports.getParticipate = async (req, res) => {
   try {
     let data = await Participate.findOne();
-    if (!data) data = await Participate.create({});
+
+    if (!data) {
+      // Return placeholder data — do NOT create
+      return res.json({
+        heading: "",
+        subheading: "",
+        opportunities: []
+      });
+    }
+
     res.json(data);
   } catch (err) {
     console.error("GET ERROR:", err);
@@ -14,12 +25,13 @@ exports.getParticipate = async (req, res) => {
   }
 };
 
-// ✅ Save JSON Data
+// ===============================
+// ✅ Save / Update data
+// ===============================
 exports.saveParticipateData = async (req, res) => {
   try {
     console.log("Incoming Data:", req.body);
 
-    // ✅ FIX — Parse opportunities if stringified
     if (typeof req.body.opportunities === "string") {
       req.body.opportunities = JSON.parse(req.body.opportunities);
     }
@@ -27,7 +39,7 @@ exports.saveParticipateData = async (req, res) => {
     let data = await Participate.findOne();
 
     if (!data) {
-      data = await Participate.create(req.body);
+      await Participate.create(req.body);   // Create only here
     } else {
       await Participate.updateOne({}, { $set: req.body });
     }
@@ -39,7 +51,9 @@ exports.saveParticipateData = async (req, res) => {
   }
 };
 
-// ✅ Upload Image to Cloudinary (disk storage)
+// ===============================
+// ✅ Upload Image
+// ===============================
 exports.uploadParticipateImage = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file provided" });
@@ -49,7 +63,6 @@ exports.uploadParticipateImage = async (req, res) => {
     });
 
     fs.unlinkSync(req.file.path);
-
     res.json({ url: result.secure_url });
   } catch (error) {
     console.error("UPLOAD ERROR:", error);

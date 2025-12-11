@@ -4,99 +4,108 @@ const { StatusCodes } = require('http-status-codes');
 const { BadRequestError, UnauthenticatedError } = require('../utils/errors');
 const jwt = require('jsonwebtoken');
 
-// Register a new user
-exports.register = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
-
-  if (!firstName || !lastName || !email || !password) {
-    throw new BadRequestError('Please provide all required fields');
-  }
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new BadRequestError('Email already in use');
-  }
-
-  const user = await User.create({ firstName, lastName, email, password });
-
-  const token = jwt.sign(
-    { userId: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_LIFETIME }
-  );
-
-  res.status(StatusCodes.CREATED).json({
-    user: {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role
-    },
-    token
-  });
-};
-
-
-// Login user
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  
-  if (!email || !password) {
-    throw new BadRequestError('Please provide email and password');
-  }
-  
-  // Find user
-  const user = await User.findOne({ email }).select('+password');
-  
-  if (!user) {
-    throw new UnauthenticatedError('Invalid credentials');
-  }
-  
-  // Check if user is active
-  if (!user.isActive) {
-    throw new UnauthenticatedError('This account has been deactivated');
-  }
-  
-  // Verify password
-  const isPasswordCorrect = await user.comparePassword(password);
-  
-  if (!isPasswordCorrect) {
-    throw new UnauthenticatedError('Invalid credentials');
-  }
-  
-  // Update last login time
-  user.lastLogin = new Date();
-  await user.save();
-  
-  // Generate JWT token
-  const token = jwt.sign(
-    { userId: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_LIFETIME }
-  );
-  
-  res.status(StatusCodes.OK).json({
-    user: {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role
-    },
-    token
-  });
-};
-
-exports.getCurrentUser = async (req, res) => {
+// =============================
+// REGISTER
+// =============================
+exports.register = async (req, res, next) => {
   try {
-    // Find user by ID, exclude password
+    const { firstName, lastName, email, password } = req.body;
+
+    if (!firstName || !lastName || !email || !password) {
+      throw new BadRequestError('Please provide all required fields');
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new BadRequestError('Email already in use');
+    }
+
+    const user = await User.create({ firstName, lastName, email, password });
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_LIFETIME }
+    );
+
+    res.status(StatusCodes.CREATED).json({
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      },
+      token
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =============================
+// LOGIN
+// =============================
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new BadRequestError('Please provide email and password');
+    }
+
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      throw new UnauthenticatedError('Invalid credentials');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthenticatedError('This account has been deactivated');
+    }
+
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      throw new UnauthenticatedError('Invalid credentials');
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_LIFETIME }
+    );
+
+    res.status(StatusCodes.OK).json({
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      },
+      token
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =============================
+// CURRENT USER
+// =============================
+exports.getCurrentUser = async (req, res, next) => {
+  try {
     const user = await User.findById(req.user.userId).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     res.status(200).json({ user });
+
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    next(error);
   }
 };
