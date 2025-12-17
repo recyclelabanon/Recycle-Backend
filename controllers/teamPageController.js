@@ -48,16 +48,17 @@ exports.getTeamPage = async (req, res) => {
   try {
     let page = await TeamPage.findOne({});
     if (!page) {
-      page = new TeamPage({
-        hero: { title: "", subtitle: "", backgroundImage: "" },
-        workWithUs: [
-          { title: "", text: "", buttonText: "", buttonLink: "" },
-          { title: "", text: "", buttonText: "", buttonLink: "" },
-        ],
-        teamSections: [],
-      });
-      await page.save();
-    }
+  page = new TeamPage({
+    hero: { title: "", subtitle: "", backgroundImage: "" },
+    workWithUs: [
+      { title: "", text: "", buttonText: "", buttonLink: "" },
+      { title: "", text: "", buttonText: "", buttonLink: "" },
+    ],
+    teamSections: [],
+  });
+  await page.save();
+}
+
     res.json(page);
   } catch (err) {
     console.error(err);
