@@ -2,47 +2,36 @@ const mongoose = require("mongoose");
 
 const VolunteerApplicationSchema = new mongoose.Schema(
   {
-    // 🔹 Applicant Info
     fullName: { type: String, required: true },
     email: { type: String, required: true },
-    location: { type: String },
+    location: String,
 
-    // 🔹 Profile
-    backgroundSkills: { type: String },
-    motivation: { type: String },
+    backgroundSkills: String,
+    motivation: String,
 
-    // 🔹 Files
-    cvUrl: { type: String, required: true },
-    portfolioUrl: { type: String },
+    availabilityPeriod: String,
+    daysPerWeek: String,
 
-    // 🔹 Availability
-    availabilityPeriod: {
-      type: String, // e.g. "June–August", "Winter", "6 months"
-    },
-    daysPerWeek: {
-      type: String, // "1–2 days", "3–4 days", "Full time"
-    },
+    categories: [String],
 
-    // 🔹 Category & Type
-    categories: [{ type: String }], // Agroecology, Media, Cooking, etc.
     applicationType: {
       type: String,
       enum: ["volunteer", "internship"],
       default: "volunteer",
     },
 
-    // 🔹 Admin Screening
+    cvUrl: { type: String, required: true },
+    portfolioUrl: String,
+
     status: {
       type: String,
       enum: ["new", "screened", "shortlisted", "approved", "rejected"],
       default: "new",
     },
-    adminNotes: { type: String },
+
+    adminNotes: String,
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model(
-  "VolunteerApplication",
-  VolunteerApplicationSchema
-);
+module.exports = mongoose.model("VolunteerApplication", VolunteerApplicationSchema);

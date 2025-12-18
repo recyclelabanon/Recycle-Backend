@@ -1,53 +1,41 @@
-/*const nodemailer = require("nodemailer");
-
-module.exports = async (app) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    to: "connect@terrapods.org",
-    subject: "New Career Application",
-    html: `
-      <h3>New Application Received</h3>
-      <p><b>Name:</b> ${app.fullName}</p>
-      <p><b>Email:</b> ${app.email}</p>
-      <p><b>Role:</b> ${app.role}</p>
-      <p>Check admin dashboard for full details.</p>
-    `,
-  });
-};*/
-
-
-
-
-
-
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.SMTP_HOST,          // e.g. mail.privateemail.com
+  port: Number(process.env.SMTP_PORT),  // 465 or 587
+  secure: Number(process.env.SMTP_PORT) === 465,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER,        // connect@terrapods.org
+    pass: process.env.SMTP_PASS,
   },
 });
 
 module.exports = async (application) => {
   await transporter.sendMail({
-    from: `"Careers" <${process.env.EMAIL_USER}>`,
-    to: "rhmain0987@gmail.com",
+    // 🔥 THIS IS THE MOST IMPORTANT FIX
+    envelope: {
+      from: process.env.SMTP_USER,
+      to: process.env.SMTP_USER,
+    },
+
+    // MUST match SMTP user
+    from: `"TerraPods Careers" <${process.env.SMTP_USER}>`,
+    to: process.env.SMTP_USER,
+    replyTo: application.email,
+
     subject: `New Career Application – ${application.role}`,
     html: `
+      <h3>New Career Application</h3>
       <p><b>Name:</b> ${application.fullName}</p>
       <p><b>Email:</b> ${application.email}</p>
       <p><b>Role:</b> ${application.role}</p>
-      <p><b>Message:</b> ${application.message}</p>
+      <p><b>Message:</b><br/>${application.message}</p>
+
+      <p>
+        <a href="${process.env.BASE_URL}/${application.resumeUrl}">
+          Download CV
+        </a>
+      </p>
     `,
   });
 };

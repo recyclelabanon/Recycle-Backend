@@ -13,13 +13,16 @@ const transporter = nodemailer.createTransport({
 module.exports = async (application) => {
   try {
     await transporter.sendMail({
-      // 🔥 REQUIRED for PrivateMail
-      from: `"TerraPods" <${process.env.SMTP_USER}>`,
-      sender: process.env.SMTP_USER,
-      replyTo: process.env.SMTP_USER,
+      // 🔥 THIS FIXES THE ERROR
+      envelope: {
+        from: process.env.SMTP_USER,
+        to: [process.env.SMTP_USER],
+      },
 
-      // Admin inbox
+      // Headers (still required)
+      from: `"TerraPods" <${process.env.SMTP_USER}>`,
       to: process.env.SMTP_USER,
+      replyTo: process.env.SMTP_USER,
 
       subject: `New ${application.applicationType} application`,
       html: `
@@ -28,13 +31,13 @@ module.exports = async (application) => {
         <p><b>Email:</b> ${application.email}</p>
         <p><b>Type:</b> ${application.applicationType}</p>
         <p><b>Location:</b> ${application.location || "—"}</p>
-        <p><b>Availability:</b> ${application.availabilityPeriod || "—"}, ${application.daysPerWeek || "—"}</p>
+        <p><b>Availability:</b> ${application.availabilityPeriod || "—"} / ${application.daysPerWeek || "—"}</p>
         <p><b>Categories:</b> ${(application.categories || []).join(", ")}</p>
         <p><b>Motivation:</b><br/>${application.motivation || "—"}</p>
       `,
     });
   } catch (err) {
-    console.error("Volunteer email error:", err);
-    // ❗ do NOT throw — form submission must still succeed
+    console.error("Volunteer email error:", err.message);
+    // ❗ Do NOT throw — form submission should still succeed
   }
 };
