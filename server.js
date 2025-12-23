@@ -66,16 +66,18 @@ const initiativesHeroRoutes = require("./routes/initiativesHeroRoutes");
 const joinUsRoutes = require("./routes/joinUsRoutes");
 const navbarRoutes = require("./routes/navbarRoutes");
 const partnerWithUsRoutes = require("./routes/partnerwithusRoutes");
+const calendarRoutes = require("./routes/calendarRoutes");
+const residencyRoutes = require("./routes/residencyRoutes");
 
 
 const app = express();
 
-// ✅ Security Middleware
+//  Security Middleware
 app.use(helmet({
   crossOriginResourcePolicy: false
 }));
 
-// ✅ Allowed Origins
+//  Allowed Origins
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
@@ -89,7 +91,7 @@ const allowedOrigins = [
 ];
 
 
-// ✅ CORS FIX (Added PATCH)
+//  CORS FIX (Added PATCH)
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -102,11 +104,11 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// ✅ Body parser
+//  Body parser
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
-// ✅ Serve uploads with CORS support
+//  Serve uploads with CORS support
 app.use("/uploads", (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
@@ -114,17 +116,17 @@ app.use("/uploads", (req, res, next) => {
 });
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ Cloudinary
+//  Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Connect DB
+//  Connect DB
 connectDB();
 
-// ✅ API Routes
+//  API Routes
 app.use("/api/v1/auth", authRoutes);
 
 app.use("/api/v1/events", eventRoutes);
@@ -178,29 +180,30 @@ app.use("/api/v1/navbar", navbarRoutes);
 app.use("/api/v1/partner-with-us", partnerWithUsRoutes);
 app.use("/api/v1/bloghero", require("./routes/blogHeroRoutes"));
 app.use("/api/v1/blognewspage", require("./routes/blogNewsPageRoutes"));
+app.use("/api/v1/calendar", calendarRoutes);
+app.use("/api/v1/residency", residencyRoutes);
 
-
-// ✅ Root
+//  Root
 app.get("/", (req, res) => {
   res.send({ status: "success", message: "🌱 Recycle Lebanon API is running!" });
 });
 
-// ✅ Error Handler
+//  Error Handler
 app.use(errorHandler);
 
-// ✅ Start Server
+//  Start Server
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(` Server running on http://localhost:${PORT}`);
 });
 
-// ✅ Graceful Shutdown
+//  Graceful Shutdown
 process.on("unhandledRejection", (err) => {
-  console.error("💥 UNHANDLED REJECTION!", err);
+  console.error(" UNHANDLED REJECTION!", err);
   server.close(() => process.exit(1));
 });
 
 process.on("SIGTERM", () => {
-  console.log("👋 SIGTERM RECEIVED. Shutting down gracefully...");
-  server.close(() => console.log("💥 Process terminated"));
+  console.log(" SIGTERM RECEIVED. Shutting down gracefully...");
+  server.close(() => console.log(" Process terminated"));
 });
