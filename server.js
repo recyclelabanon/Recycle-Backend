@@ -66,6 +66,7 @@ const initiativesHeroRoutes = require("./routes/initiativesHeroRoutes");
 const joinUsRoutes = require("./routes/joinUsRoutes");
 const navbarRoutes = require("./routes/navbarRoutes");
 const partnerWithUsRoutes = require("./routes/partnerwithusRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const calendarRoutes = require("./routes/calendarRoutes");
 const residencyRoutes = require("./routes/residencyRoutes");
 
@@ -180,8 +181,9 @@ app.use("/api/v1/navbar", navbarRoutes);
 app.use("/api/v1/partner-with-us", partnerWithUsRoutes);
 app.use("/api/v1/bloghero", require("./routes/blogHeroRoutes"));
 app.use("/api/v1/blognewspage", require("./routes/blogNewsPageRoutes"));
+app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/calendar", calendarRoutes);
-app.use("/api/v1/residency", residencyRoutes);
+app.use("/api/v1/residencies", residencyRoutes);
 
 //  Root
 app.get("/", (req, res) => {

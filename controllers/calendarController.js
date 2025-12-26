@@ -1,40 +1,15 @@
-const CalendarEvent = require("../models/CalendarEvent");
+const Event = require("../models/EventCalendar");
 
-/* PUBLIC CALENDAR */
 exports.getPublicCalendarEvents = async (req, res) => {
   try {
-    const events = await CalendarEvent.find({
-      approved: true,
+    const events = await Event.find({
+      status: "approved",
       visibility: "public",
-    }).sort("startDate");
+      showOnCalendar: true,
+    }).sort({ startDate: 1 });
 
     res.json(events);
   } catch (err) {
-    res.status(500).json({ message: "Failed to load calendar events" });
+    res.status(500).json({ message: "Calendar load failed", error: err.message });
   }
-};
-
-/* ADMIN */
-exports.getAllCalendarEvents = async (req, res) => {
-  const events = await CalendarEvent.find().sort("-createdAt");
-  res.json(events);
-};
-
-exports.createEvent = async (req, res) => {
-  const event = await CalendarEvent.create(req.body);
-  res.status(201).json(event);
-};
-
-exports.updateEvent = async (req, res) => {
-  const event = await CalendarEvent.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-  );
-  res.json(event);
-};
-
-exports.deleteEvent = async (req, res) => {
-  await CalendarEvent.findByIdAndDelete(req.params.id);
-  res.json({ success: true });
 };

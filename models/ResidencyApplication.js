@@ -1,22 +1,28 @@
 const mongoose = require("mongoose");
 
-const ResidencySchema = new mongoose.Schema(
+const ResidencyApplicationSchema = new mongoose.Schema(
   {
-    residencyTitle: String,
-    fullName: String,
+    eventId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+    },
+
+    applicantName: String,
     email: String,
-    location: String,
-    motivation: String,
-    experience: String,
+    phone: String,
+
+    answers: Object,
     attachments: [String],
 
     status: {
       type: String,
-      enum: ["new", "approved", "rejected"],
-      default: "new",
+      default: "submitted",
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ResidencyApplication", ResidencySchema);
+module.exports = mongoose.model(
+  "ResidencyApplication",
+  ResidencyApplicationSchema
+);

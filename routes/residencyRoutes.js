@@ -1,9 +1,12 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/residencyController");
-const upload = require("../middleware/upload");
+const express = require("express");
+const router = express.Router();
 
-router.post("/apply", upload.array("attachments"), ctrl.apply);
-router.get("/admin", ctrl.getAll);
-router.patch("/admin/:id/status", ctrl.updateStatus);
+const {
+  applyResidency,
+  getApplications,
+} = require("../controllers/residencyController");
+
+router.post("/:id/apply", applyResidency);
+router.get("/applications", getApplications);
 
 module.exports = router;

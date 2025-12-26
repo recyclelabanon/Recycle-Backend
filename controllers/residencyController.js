@@ -1,33 +1,19 @@
-const Residency = require("../models/ResidencyApplication");
-const sendResidencySubmissionEmail = require("../utils/sendResidencySubmissionEmail");
-const sendResidencyStatusEmail = require("../utils/sendResidencyStatusEmail");
+const ResidencyApplication = require("../models/ResidencyApplication");
 
-exports.apply = async (req, res) => {
-  const attachments = req.files?.map(f => `uploads/residency/${f.filename}`) || [];
-
-  const app = await Residency.create({
-    ...req.body,
-    attachments,
-  });
-
-  await sendResidencySubmissionEmail(app);
-
-  res.status(201).json({ success: true });
+exports.applyResidency = async (req, res) => {
+  try {
+    const app = await ResidencyApplication.create(req.body);
+    res.json(app);
+  } catch (err) {
+    res.status(500).json({ message: "Application failed", error: err.message });
+  }
 };
 
-exports.getAll = async (req, res) => {
-  const apps = await Residency.find().sort("-createdAt");
-  res.json(apps);
-};
-
-exports.updateStatus = async (req, res) => {
-  const app = await Residency.findByIdAndUpdate(
-    req.params.id,
-    { status: req.body.status },
-    { new: true }
-  );
-
-  await sendResidencyStatusEmail(app);
-
-  res.json(app);
+exports.getApplications = async (req, res) => {
+  try {
+    const apps = await ResidencyApplication.find().populate("eventId");
+    res.json(apps);
+  } catch (err) {
+    res.status(500).json({ message: "Fetch failed", error: err.message });
+  }
 };

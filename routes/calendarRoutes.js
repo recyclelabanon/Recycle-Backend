@@ -1,13 +1,7 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/calendarController");
+const express = require("express");
+const router = express.Router();
+const { getPublicCalendarEvents } = require("../controllers/calendarController");
 
-/* PUBLIC */
-router.get("/public", ctrl.getPublicCalendarEvents);
-
-/* ADMIN */
-router.get("/admin", ctrl.getAllCalendarEvents);
-router.post("/admin", ctrl.createEvent);
-router.patch("/admin/:id", ctrl.updateEvent);
-router.delete("/admin/:id", ctrl.deleteEvent);
+router.get("/public", getPublicCalendarEvents);
 
 module.exports = router;
