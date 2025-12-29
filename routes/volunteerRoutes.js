@@ -12,6 +12,10 @@ router.post(
   ctrl.apply
 );
 
+router.get("/categories", ctrl.getCategories);
+router.post("/admin/categories", ctrl.createCategory);
+router.delete("/admin/categories/:id", ctrl.deleteCategory);
+
 router.get("/admin", ctrl.getApplications);
 router.patch("/admin/:id/status", ctrl.updateStatus);
 router.delete("/admin/:id", ctrl.deleteApplication);

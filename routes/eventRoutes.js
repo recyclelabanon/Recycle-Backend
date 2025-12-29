@@ -9,6 +9,8 @@ const {
   getCurrentEvents,
   getUpcomingEvents,
   getPastEvents,
+  getAllRegistrations,
+  updateRegistrationStatus,
 } = require("../controllers/eventController");
 
 // public endpoints
@@ -22,5 +24,9 @@ router.get("/:id", getEventById);
 router.post("/", createEvent);
 router.put("/:id", updateEvent);
 router.delete("/:id", deleteEvent);
+
+// global registrations admin
+router.get("/registrations/admin", getAllRegistrations);
+router.patch("/registrations/admin/:id/status", updateRegistrationStatus);
 
 module.exports = router;

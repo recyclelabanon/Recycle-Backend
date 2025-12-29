@@ -4,7 +4,7 @@ const ResidencyApplicationSchema = new mongoose.Schema(
   {
     eventId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Event",
+      ref: "EventCalendar",
     },
 
     applicantName: String,
@@ -16,7 +16,8 @@ const ResidencyApplicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      default: "submitted",
+      enum: ["new", "screened", "approved", "rejected"],
+      default: "new",
     },
   },
   { timestamps: true }

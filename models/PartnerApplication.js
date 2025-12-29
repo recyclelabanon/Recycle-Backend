@@ -6,15 +6,6 @@ const PartnerApplicationSchema = new mongoose.Schema(
 
     partnerType: {
       type: String,
-      enum: [
-        "NGO",
-        "Academic / Research",
-        "Cultural",
-        "Corporate / Brand",
-        "Foundation",
-        "Artist",
-        "Individual",
-      ],
       required: true,
     },
 
@@ -28,7 +19,7 @@ const PartnerApplicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["new", "reviewed", "approved", "rejected"],
+      enum: ["new", "screened", "approved", "rejected"],
       default: "new",
     },
   },

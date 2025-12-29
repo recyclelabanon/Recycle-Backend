@@ -12,6 +12,12 @@ const CareerApplicationSchema = new mongoose.Schema(
 
     referenceName: String,
     referenceContact: String,
+
+    status: {
+      type: String,
+      enum: ["new", "screened", "approved", "rejected"],
+      default: "new",
+    },
   },
   { timestamps: true }
 );

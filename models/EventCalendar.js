@@ -36,6 +36,25 @@ const EventSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    image: String, // Cloudinary URL
+    highlights: [String],
+    timeline: [
+      {
+        title: String,
+        date: Date,
+        description: String,
+      },
+    ],
+
+    allowBooking: {
+      type: Boolean,
+      default: false,
+    },
+    allowResidencyApply: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

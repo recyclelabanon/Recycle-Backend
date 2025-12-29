@@ -30,6 +30,11 @@ module.exports = async (application) => {
       <p><b>Categories:</b> ${(application.categories || []).join(", ")}</p>
       <p><b>Availability:</b> ${application.availabilityPeriod} / ${application.daysPerWeek}</p>
       <p><b>Motivation:</b><br/>${application.motivation}</p>
+      <hr/>
+      <p>
+        <a href="http://localhost:5000/${application.cvUrl}" style="background:#2726CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; font-weight:bold;">Download CV / Resume</a>
+        ${application.portfolioUrl ? ` &nbsp; <a href="http://localhost:5000/${application.portfolioUrl}" style="background:#2726CC; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; font-weight:bold;">Download Portfolio</a>` : ""}
+      </p>
     `,
   });
 };

@@ -2,7 +2,10 @@ const ResidencyApplication = require("../models/ResidencyApplication");
 
 exports.applyResidency = async (req, res) => {
   try {
-    const app = await ResidencyApplication.create(req.body);
+    const app = await ResidencyApplication.create({
+      ...req.body,
+      eventId: req.params.id,
+    });
     res.json(app);
   } catch (err) {
     res.status(500).json({ message: "Application failed", error: err.message });

@@ -125,6 +125,43 @@ const getPastEvents = async (req, res) => {
   }
 };
 
+const getAllRegistrations = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const Registration = require("../models/Registration");
+    const filter = {};
+    if (status) filter.status = status;
+
+    const registrations = await Registration.find(filter)
+      .populate("event", "title")
+      .sort("-registeredAt");
+
+    // map to match dashboard expectations (fullName/applicantName)
+    const normalized = registrations.map(r => ({
+      ...r._doc,
+      fullName: r.name,
+      residencyTitle: r.event?.title,
+    }));
+
+    res.json(normalized);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load registrations" });
+  }
+};
+
+const updateRegistrationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const Registration = require("../models/Registration");
+    const reg = await Registration.findByIdAndUpdate(id, { status }, { new: true });
+    res.json(reg);
+  } catch (err) {
+    res.status(500).json({ message: "Update failed" });
+  }
+};
+
 module.exports = {
   getAllEvents,
   getEventById,
@@ -134,6 +171,8 @@ module.exports = {
   getCurrentEvents,
   getUpcomingEvents,
   getPastEvents,
+  getAllRegistrations,
+  updateRegistrationStatus,
 };
 
 

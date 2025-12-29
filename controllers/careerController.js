@@ -73,12 +73,35 @@ exports.apply = async (req, res) => {
 /* ===============================
    Admin: Get Applications
 ================================ */
-exports.getApplications = async (_, res) => {
+exports.getApplications = async (req, res) => {
   try {
-    const apps = await CareerApplication.find().sort("-createdAt");
+    const { status, role } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (role) filter.role = role;
+
+    const apps = await CareerApplication.find(filter).sort("-createdAt");
     res.json(apps);
   } catch (err) {
     res.status(500).json({ message: "Failed to load applications" });
+  }
+};
+
+/* ===============================
+   Admin: Update Status
+================================ */
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const app = await CareerApplication.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+    res.json(app);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update status" });
   }
 };
 
@@ -95,147 +118,29 @@ exports.deleteApplication = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*const path = require("path");
-const CareerApplication = require("../models/CareerApplication");
-const CareerRole = require("../models/CareerRole");
-const sendCareerEmail = require("../utils/sendCareerEmail");
-
-
-exports.getRoles = async (_, res) => {
+/* ===============================
+   Admin: Manage Roles
+================================ */
+exports.createRole = async (req, res) => {
   try {
-    const roles = await CareerRole.find().sort("name");
-    res.json(roles);
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: "Name is required" });
+    const role = await CareerRole.create({ name });
+    res.status(201).json(role);
   } catch (err) {
-    res.status(500).json({ message: "Failed to load roles" });
+    res.status(500).json({ message: "Failed to create role" });
   }
 };
 
-
-
-
-
-
-
-
-
-
-exports.deleteApplication = async (req, res) => {
+exports.deleteRole = async (req, res) => {
   try {
     const { id } = req.params;
-
-    await CareerApplication.findByIdAndDelete(id);
-
+    await CareerRole.findByIdAndDelete(id);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false });
   }
 };
-
-
-
-
-
-
-
-
-exports.apply = async (req, res) => {
-  try {
-    const {
-      fullName,
-      email,
-      role,
-      message,
-      referenceName,
-      referenceContact,
-    } = req.body;
-
-    
-    if (!req.files || !req.files.resume) {
-      return res.status(400).json({ message: "Resume is required" });
-    }
-
-    const resumeFile = req.files.resume[0];
-    const portfolioFile = req.files.portfolio?.[0];
-
-    
-    const resumeUrl = `uploads/careers/${resumeFile.filename}`;
-    const portfolioUrl = portfolioFile
-      ? `uploads/careers/${portfolioFile.filename}`
-      : null;
-
-    const application = await CareerApplication.create({
-      fullName,
-      email,
-      role,
-      message,
-      resumeUrl,
-      portfolioUrl,
-      referenceName,
-      referenceContact,
-    });
-
-    if (process.env.NODE_ENV !== "development") {
-      await sendCareerEmail(application);
-    } else {
-      console.log("📩 Email skipped (development mode)");
-    }
-
-    res.status(201).json({
-      success: true,
-      application,
-    });
-  } catch (err) {
-    console.error("Career apply error:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message || "Internal server error",
-    });
-  }
-};
-
-
-exports.getApplications = async (_, res) => {
-  try {
-    const apps = await CareerApplication.find().sort("-createdAt");
-    res.json(apps);
-  } catch (err) {
-    res.status(500).json({ message: "Failed to load applications" });
-  }
-};*/
-
-
-
-
-
 
 
 
