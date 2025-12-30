@@ -186,7 +186,7 @@ app.use("/api/v1/residencies", residencyRoutes);
 
 //  Root
 app.get("/", (req, res) => {
-  res.send({ status: "success", message: "🌱 Recycle Lebanon API is running!" });
+  res.send({ status: "success", message: " Recycle Lebanon API is running!" });
 });
 
 //  Error Handler
