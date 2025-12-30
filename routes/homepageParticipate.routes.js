@@ -6,8 +6,8 @@ const {
   uploadParticipateImage
 } = require("../controllers/homepageParticipate.controller");
 
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+// Use the memory storage middleware (no disk writes)
+const upload = require("../middleware/uploadMiddleware");
 
 // ✅ Routes
 router.get("/", getParticipate);

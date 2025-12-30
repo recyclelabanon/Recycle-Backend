@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
 const cloudinary = require('cloudinary').v2;
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const upload = require("../middleware/uploadMiddleware");
 
 // Get all events grouped by type
 router.get('/events', async (req, res) => {
