@@ -5,10 +5,10 @@ const cors = require('cors');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
 
-// ✅ DB
+// DB
 const connectDB = require('./config/db');
 
-// ✅ Routes imports
+// Routes imports
 const authenticateUser = require("./middleware/auth");
 const authRoutes = require('./routes/authRoutes');
 
