@@ -1,51 +1,36 @@
 // middleware/multer.js
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
-const { createUploadsFolder } = require('../utils/fileUtils'); // Optional helper
 
-// Configure storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, '../uploads');
-    
-    // Create uploads directory if it doesn't exist (optional)
-    createUploadsFolder(uploadPath); // Implement this helper if needed
-    
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, uniqueSuffix + ext);
-  }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// File filter configuration
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'video/mp4',
-    'video/quicktime',
-    'application/pdf'
-  ];
-
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only images, videos, and PDFs are allowed!'), false);
+// Configure storage engine
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'recycle-lebanon/general',
+    resource_type: 'auto', // Auto detect type (image, video, raw)
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'pdf'], // Add more if needed
   }
-};
+});
 
 // Configure multer instance
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: fileFilter
+    fileSize: 10 * 1024 * 1024 // 10MB limit (increased for videos/PDFs)
+  }
+  // No need for manual fileFilter as allowed_formats in CloudinaryStorage handles it partially,
+  // but if strict validation is needed, we can keep it. 
+  // For now, relying on Cloudinary's allowed_formats is often enough, 
+  // but keeping a custom filter is safer if we want to reject before upload starts.
 });
 
 module.exports = {
